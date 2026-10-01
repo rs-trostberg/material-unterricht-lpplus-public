@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Fernbedienung">
+<meta name="theme-color" content="#024583">
+<title>Fernbedienung</title>
+<link rel="stylesheet" href="praesentation.css">
+</head>
+<body class="fernbedienung">
+  <!-- Fernbedienung für die Web-Präsentation: schickt „weiter“, „zurueck“ und
+       „gehe:N“ in den Kanal, den die Präsentationsseite als QR-Code zeigt, und
+       zeigt die Folien davor und danach, sobald die Präsentationsseite ihren
+       Stand meldet. S. vorlagen/web/README.md. -->
+  <div class="fb-kopf">
+    <img class="fb-jetzt" id="jetzt" alt="" hidden>
+    <div>
+      <h1 id="titel">Fernbedienung</h1>
+      <div class="klein" id="kanal-anzeige"></div>
+    </div>
+  </div>
+
+  <div class="fb-tasten">
+    <button class="fb-zurueck" id="zurueck" aria-label="Zurück">
+      <img alt="" hidden><span>◀ zurück</span>
+    </button>
+    <button class="fb-weiter" id="weiter" aria-label="Weiter">
+      <img alt="" hidden><span>weiter ▶</span>
+    </button>
+  </div>
+  <div class="fb-leiste">
+    <button class="knopf" id="raster-auf" hidden>▦ Alle Folien</button>
+    <div class="fb-status" id="status"></div>
+  </div>
+
+  <div class="fb-raster" id="raster-feld" hidden>
+    <div class="fb-raster-kopf">
+      <strong>Folie antippen</strong>
+      <button class="knopf" id="raster-zu">Schließen</button>
+    </div>
+    <div class="raster" id="raster"></div>
+  </div>
+
+  <details class="fb-hilfe">
+    <summary>Apple Watch einrichten</summary>
+    <ol>
+      <li>Auf dem iPhone die App <strong>Kurzbefehle</strong> öffnen, neuen Kurzbefehl anlegen, Name „Folie weiter“.</li>
+      <li>Aktion <strong>„Inhalte von URL abrufen“</strong> hinzufügen und als URL eintragen:<br><code id="uhr-weiter"></code><br>(Methode bleibt <strong>GET</strong>, sonst nichts einstellen.)</li>
+      <li>In den Details des Kurzbefehls <strong>„Auf Apple Watch anzeigen“</strong> einschalten.</li>
+      <li>Auf der Uhr den Kurzbefehl als <strong>Komplikation</strong> aufs Zifferblatt legen — ein Tipp blättert weiter.</li>
+      <li>Genauso einen zweiten Kurzbefehl „Folie zurück“ mit dieser URL:<br><code id="uhr-zurueck"></code></li>
+    </ol>
+    <p class="klein">Die Uhr braucht dafür Netz — über das gekoppelte iPhone oder eigenes WLAN/Mobilfunk.</p>
+  </details>
+
+<script src="relay.js"></script>
+<script src="raster.js"></script>
+<script>
+(function () {
+  const kanal = holeKanal({ neuErlaubt: false });
+  const $ = (id) => document.getElementById(id);
+  const status = $("status");
+  const anzeige = $("kanal-anzeige");
+  const w = $("weiter"), z = $("zurueck");
+
+  if (!kanal) {
+    anzeige.textContent = "Noch nicht gekoppelt";
+    status.textContent = "Auf der Präsentationsseite ☰ antippen und den QR-Code scannen.";
+    w.disabled = true;
+    z.disabled = true;
+    return;
+  }
+  anzeige.textContent = "Kanal " + kanal;
+  $("uhr-weiter").textContent = uhrAdresse(kanal, "weiter");
+  $("uhr-zurueck").textContent = uhrAdresse(kanal, "zurueck");
+
+  // ---------- Stand der Präsentation ----------
+  let stand = null;              // zuletzt gemeldet, s. deuteStand in relay.js
+  let raster = null, rasterFuer = "";
+
+  function bildSetzen(img, n) {
+    const adr = vorschauAdresse(stand, n);
+    img.hidden = !adr;
+    if (adr && img.getAttribute("src") !== adr) img.src = adr;
+  }
+
+  function zeigeStand() {
+    if (!stand) return;
+    const n = stand.n;
+    $("titel").textContent = stand.titel || "Fernbedienung";
+    anzeige.textContent = `Folie ${n} von ${stand.anzahl}`;
+    bildSetzen($("jetzt"), n);
+    bildSetzen(z.querySelector("img"), n - 1);
+    bildSetzen(w.querySelector("img"), n + 1);
+    z.querySelector("span").textContent = n > 1 ? `◀ ${n - 1}` : "◀ Anfang";
+    w.querySelector("span").textContent = n < stand.anzahl ? `${n + 1} ▶` : "Ende";
+    document.body.classList.add("mit-vorschau");
+    $("raster-auf").hidden = false;
+    // Raster nur neu bauen, wenn eine andere Stunde läuft
+    const schluessel = stand.pfad + "|" + stand.anzahl;
+    if (schluessel !== rasterFuer) {
+      rasterFuer = schluessel;
+      raster = baueRaster($("raster"), stand.anzahl, (k) => vorschauAdresse(stand, k), (k) => {
+        druecke("gehe:" + k);
+        $("raster-feld").hidden = true;
+      });
+    }
+    raster(n, !$("raster-feld").hidden);
+  }
+
+  function nachricht(text) {
+    const s = deuteStand(text);
+    if (s) { stand = s; zeigeStand(); }
+  }
+
+  // Nachfragen beim Verbinden und beim Zurückkommen in die App — beim bloßen
+  // Wiederverbinden höchstens alle 20 s, damit ein wackeliges Netz nicht das
+  // Nachrichtenkontingent von ntfy.sh aufbraucht.
+  let gefragt = 0;
+  function frage(erzwingen) {
+    if (!erzwingen && Date.now() - gefragt < 20000) return;
+    gefragt = Date.now();
+    sende(kanal, STAND_FRAGE);
+  }
+  hoere(kanal, nachricht, (zustand) => {
+    document.body.classList.toggle("getrennt", zustand !== "an");
+    if (zustand === "an") frage(false);
+  });
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) frage(true); });
+
+  // ---------- Senden ----------
+  let leeren = 0;
+  async function druecke(text) {
+    // Vorschau sofort mitziehen, die Bestätigung kommt mit dem nächsten Stand
+    if (stand) {
+      const ziel = text === "weiter" ? stand.n + 1 : text === "zurueck" ? stand.n - 1
+        : parseInt(text.split(":")[1], 10);
+      stand = { ...stand, n: Math.max(1, Math.min(stand.anzahl, ziel)) };
+      zeigeStand();
+    }
+    const ok = await sende(kanal, text);
+    if (navigator.vibrate) navigator.vibrate(15);
+    status.textContent = ok ? "" : "Nicht gesendet — Netz prüfen";
+    clearTimeout(leeren);
+    leeren = setTimeout(() => { status.textContent = ""; }, 2500);
+  }
+  w.addEventListener("click", () => druecke("weiter"));
+  z.addEventListener("click", () => druecke("zurueck"));
+  $("raster-auf").addEventListener("click", () => {
+    $("raster-feld").hidden = false;
+    if (raster && stand) raster(stand.n, true);
+  });
+  $("raster-zu").addEventListener("click", () => { $("raster-feld").hidden = true; });
+})();
+</script>
+</body>
+</html>
