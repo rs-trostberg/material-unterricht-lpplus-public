@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#000000">
+<title>Der Farbkreis</title>
+<link rel="stylesheet" href="../../../../../../../_web/praesentation.css">
+</head>
+<body class="praesentation still">
+<div class="buehne" id="buehne"><img id="folie" alt="Folie"></div>
+<div class="fortschritt" id="fortschritt"></div>
+<div class="zaehler" id="zaehler"></div>
+<div class="verbindung" id="verbindung" title="Fernbedienung"></div>
+<button class="menueknopf" id="menueknopf" aria-label="Menü">☰</button>
+
+<div class="menue" id="menue">
+  <div class="karte">
+    <h1>Der Farbkreis</h1>
+    <p class="unter">Primär-, Sekundär- und Tertiärfarben mischen<br>Kunst · 7 · 23.09.2026 · 11 Folien</p>
+    <div class="knopfreihe">
+      <button class="knopf haupt" id="los">Präsentation starten</button>
+      <a class="knopf" href="../../../../../../../index.html">Übersicht</a>
+    </div>
+    <p class="klein">Blättern: rechts tippen oder nach links wischen, links tippen zurück — Pfeiltasten und
+      Presenter gehen auch. Das Menü holt ☰ oben rechts zurück.</p>
+
+    <details class="alle-folien" id="alle-folien">
+      <summary>Alle Folien — direkt anspringen</summary>
+      <div class="raster" id="raster"></div>
+    </details>
+
+    <h2>Zum Herunterladen</h2>
+<ul class="downloads"><li><a class="knopf" href="dateien/7_kunst_2026-09-23.pdf" download>Folien (PDF)</a></li><li><a class="knopf" href="dateien/7_kunst_handout_2026-09-23.pdf" download>Handout (PDF)</a></li><li><a class="knopf" href="dateien/arbeitsblatt_1_farbkreis_vorlage.pdf" download>Arbeitsblatt — farbkreis vorlage (PDF)</a></li><li><a class="knopf" href="dateien/arbeitsblatt_2_mischprotokoll.pdf" download>Arbeitsblatt — mischprotokoll (PDF)</a></li></ul>
+
+    <h2>Fernbedienung mit dem iPhone</h2>
+    <div class="kopplung">
+      <div class="qr" id="qr"></div>
+      <div>
+        <p>QR-Code mit der Kamera scannen — die Fernbedienung öffnet sich. Einmal gekoppelt,
+          merkt sie sich den Kanal für alle Stunden.</p>
+        <p class="klein"><a id="fb-link"></a></p>
+      </div>
+    </div>
+
+    <h2>Apple Watch</h2>
+    <p>Ein Kurzbefehl, der diese Adresse aufruft, blättert weiter — Anleitung auf der Fernbedienung:</p>
+    <p class="klein"><code id="uhr-url"></code></p>
+
+    <div class="knopfreihe">
+      <button class="knopf" id="zu">Schließen</button>
+      <button class="knopf" id="neuer-kanal">Neuen Kanal anlegen</button>
+    </div>
+  </div>
+</div>
+
+<script>window.FOLIEN = {"anzahl": 11, "muster": "folie-{n}.svg", "vorschau": "vorschau-{n}.png", "stellen": 2, "wurzel": "../../../../../../../_web/", "titel": "Der Farbkreis"};</script>
+<script src="../../../../../../../_web/relay.js"></script>
+<script src="../../../../../../../_web/qrcode.js"></script>
+<script src="../../../../../../../_web/raster.js"></script>
+<script src="../../../../../../../_web/praesentation.js"></script>
+</body>
+</html>

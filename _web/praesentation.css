@@ -1,0 +1,309 @@
+/* Web-Präsentation der Unterrichtsfolien — s. vorlagen/web/README.md.
+   Farben wie im Folien-Theme (vorlagen/unterricht-lib.typ), Schrift wie überall
+   Atkinson Hyperlegible Next (vorlagen/fonts/). */
+
+@font-face {
+  font-family: "Atkinson Hyperlegible Next";
+  src: url("fonts/AtkinsonHyperlegibleNext-Regular.ttf") format("truetype");
+  font-weight: 400;
+}
+@font-face {
+  font-family: "Atkinson Hyperlegible Next";
+  src: url("fonts/AtkinsonHyperlegibleNext-Bold.ttf") format("truetype");
+  font-weight: 700;
+}
+
+:root {
+  --navy: #024583;
+  --rot: #CC1314;
+  --grau: #EDEFF3;
+  --tinte: #111827;
+  --grau-text: #6B7280;
+  --schrift: "Atkinson Hyperlegible Next", system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  overscroll-behavior-x: none;
+  height: 100%;
+  font-family: var(--schrift);
+  color: var(--tinte);
+  -webkit-text-size-adjust: 100%;
+}
+
+/* ---------- Präsentationsseite ---------- */
+
+body.praesentation {
+  background: #000;
+  overflow: hidden;
+  overscroll-behavior: none;         /* kein Zurück-Wischen, kein Gummiband-Scrollen */
+  touch-action: manipulation;       /* kein Doppeltipp-Zoom, der das Blättern verschluckt */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.buehne {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Die Folie füllt den Bildschirm im Seitenverhältnis 16:9 — schwarze Ränder,
+   wo Beamer oder iPad ein anderes Format haben. */
+.buehne img {
+  max-width: 100vw;
+  max-height: 100vh;
+  width: auto;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: contain;
+  background: #fff;
+  pointer-events: none;
+}
+
+/* dünner Fortschrittsbalken am unteren Rand */
+.fortschritt {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  background: var(--rot);
+  width: 0;
+  transition: width .2s ease;
+  opacity: .8;
+}
+
+/* Bedienknopf oben rechts — blendet sich nach kurzer Zeit aus */
+.menueknopf {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 22px;
+  background: rgba(0, 0, 0, .45);
+  color: #fff;
+  font-size: 22px;
+  line-height: 44px;
+  cursor: pointer;
+  transition: opacity .4s ease;
+}
+.still .menueknopf, .still .zaehler { opacity: 0; }
+
+.zaehler {
+  position: fixed;
+  left: 12px;
+  bottom: 10px;
+  padding: 3px 9px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, .45);
+  color: #fff;
+  font-size: 14px;
+  transition: opacity .4s ease;
+}
+
+.verbindung {
+  position: fixed;
+  right: 12px;
+  bottom: 10px;
+  width: 10px;
+  height: 10px;
+  border-radius: 5px;
+  background: transparent;
+}
+.verbindung.an { background: #16A34A; }
+.verbindung.getrennt { background: #F59E0B; }
+
+/* ---------- Menü (Start- und Einstellungsfenster) ---------- */
+
+.menue {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, .6);
+  padding: 16px;
+}
+.menue.offen { display: flex; }
+
+.karte {
+  background: #fff;
+  border-radius: 14px;
+  padding: 22px 24px;
+  width: min(560px, 100%);
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, .4);
+}
+.karte h1 { margin: 0 0 4px; color: var(--navy); font-size: 26px; }
+.karte .unter { margin: 0 0 16px; color: var(--grau-text); }
+.karte h2 { margin: 18px 0 6px; color: var(--navy); font-size: 17px; }
+.karte p { margin: 6px 0; line-height: 1.4; }
+
+.knopfreihe { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.knopf {
+  appearance: none;
+  border: 0;
+  border-radius: 10px;
+  padding: 11px 16px;
+  font: inherit;
+  font-weight: 700;
+  background: var(--grau);
+  color: var(--navy);
+  cursor: pointer;
+  text-decoration: none;
+}
+.knopf.haupt { background: var(--rot); color: #fff; }
+
+.kopplung { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+.kopplung .qr { width: 150px; height: 150px; flex: none; }
+.kopplung .qr svg, .kopplung .qr img { width: 100%; height: 100%; }
+.klein { font-size: 13px; color: var(--grau-text); overflow-wrap: anywhere; }
+code { background: var(--grau); border-radius: 4px; padding: 1px 5px; font-size: 13px; }
+
+/* ---------- Fernbedienung ---------- */
+
+body.fernbedienung {
+  background: var(--navy);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.fb-kopf { padding: 14px 16px 6px; display: flex; gap: 12px; align-items: center; }
+.fb-kopf h1 { margin: 0; font-size: 18px; line-height: 1.2; }
+.fb-kopf .klein { color: rgba(255, 255, 255, .75); font-size: 14px; }
+.fb-jetzt { width: 96px; aspect-ratio: 16 / 9; flex: none; border-radius: 6px; background: #fff; outline: 2px solid var(--rot); }
+.getrennt .fb-kopf { opacity: .55; }
+.fb-tasten {
+  flex: 1;
+  display: grid;
+  grid-template-rows: 1fr 2fr;
+  gap: 12px;
+  padding: 12px 16px;
+  min-height: 0;
+}
+.fb-tasten button {
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+  border: 0;
+  border-radius: 18px;
+  font: inherit;
+  font-weight: 700;
+  font-size: 28px;
+  color: #fff;
+  cursor: pointer;
+}
+.fb-zurueck { background: rgba(255, 255, 255, .18); }
+.fb-weiter { background: var(--rot); }
+.fb-tasten button:active { filter: brightness(1.25); }
+/* Mit Vorschau: Die Folie davor bzw. danach füllt den Knopf, die Beschriftung
+   rückt als Plakette in die Ecke. */
+.fb-tasten button img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #fff;
+}
+.fb-tasten .fb-zurueck img { opacity: .8; }
+.mit-vorschau .fb-tasten button { background: #0b1f3a; border: 3px solid rgba(255, 255, 255, .25); }
+.mit-vorschau .fb-tasten .fb-weiter { border-color: var(--rot); }
+.mit-vorschau .fb-tasten button span {
+  position: absolute;
+  bottom: 8px;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 20px;
+  background: rgba(17, 24, 39, .75);
+}
+.mit-vorschau .fb-zurueck span { left: 8px; }
+.mit-vorschau .fb-weiter span { right: 8px; background: var(--rot); }
+.fb-leiste { display: flex; align-items: center; gap: 12px; padding: 0 16px 12px; min-height: 44px; }
+.fb-status { flex: 1; text-align: right; font-size: 14px; }
+
+/* Raster zum direkten Anspringen (Fernbedienung und Menü der Präsentation) */
+.raster { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+.raster-folie {
+  position: relative;
+  padding: 0;
+  border: 3px solid transparent;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+  cursor: pointer;
+}
+.raster-folie img { display: block; width: 100%; aspect-ratio: 16 / 9; }
+.raster-folie span {
+  position: absolute;
+  left: 4px;
+  bottom: 4px;
+  min-width: 24px;
+  padding: 1px 6px;
+  border-radius: 8px;
+  background: rgba(17, 24, 39, .75);
+  color: #fff;
+  font: 700 13px var(--schrift);
+}
+.raster-folie.aktuell { border-color: var(--rot); }
+.fb-raster {
+  position: fixed;
+  inset: 0;
+  overflow: auto;
+  background: var(--navy);
+  padding: 0 16px 24px;
+  overscroll-behavior: contain;
+}
+.fb-raster[hidden] { display: none; }
+.fb-raster-kopf {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 0 10px;
+  background: var(--navy);
+}
+.alle-folien { margin-top: 16px; }
+.alle-folien summary { cursor: pointer; font-weight: 700; color: var(--navy); padding: 6px 0; }
+.alle-folien .raster { margin-top: 8px; max-height: 50vh; overflow: auto; padding: 2px; }
+.fb-hilfe { background: #fff; color: var(--tinte); margin: 0 16px 16px; border-radius: 12px; padding: 4px 14px 12px; }
+.fb-hilfe summary { cursor: pointer; padding: 10px 0; font-weight: 700; color: var(--navy); }
+.fb-hilfe ol { padding-left: 20px; line-height: 1.45; }
+
+/* ---------- Übersicht ---------- */
+
+body.uebersicht { background: var(--grau); }
+.uebersicht main { max-width: 900px; margin: 0 auto; padding: 24px 16px 40px; }
+.uebersicht h1 { color: var(--navy); margin: 0 0 4px; }
+.uebersicht h2 { color: var(--navy); margin: 28px 0 8px; font-size: 20px; }
+.uebersicht ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.uebersicht li a {
+  display: block;
+  background: #fff;
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: var(--tinte);
+  text-decoration: none;
+  border-left: 4px solid var(--rot);
+}
+.uebersicht li a strong { color: var(--navy); }
+.uebersicht li a span { color: var(--grau-text); font-size: 14px; }
+
+/* Downloads (Menü der Präsentation und Download-Seite) */
+ul.downloads, .uebersicht ul.downloads { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.downloads .knopf { display: inline-block; }
+.uebersicht .downloads li a.knopf { border-left: 0; background: #fff; color: var(--navy); }
